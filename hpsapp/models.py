@@ -15,7 +15,7 @@ class User(AbstractUser):
 
 
 class Doctor(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     department = models.CharField(max_length=255, null=True, blank=True)
     
     def __str__(self):
@@ -27,7 +27,7 @@ class Doctor(models.Model):
 
 
 class LabTechnician(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
 
     def __str__(self):
         return self.user.username
