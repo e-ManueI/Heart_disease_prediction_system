@@ -1,0 +1,14 @@
+{% extends 'hpsapp/base.html' %}
+
+{% block content %}
+  	<h2>{{ title }}</h2>
+	
+	<form method="post">
+		{% csrf_token %}
+		{{ form.as_p }}
+		<button type="submit">Register</button>
+	</form>
+
+	<a href="{% url 'hpsapp:login' %}">Login</a>
+{% endblock content %}
+
