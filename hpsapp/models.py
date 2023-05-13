@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 class User(AbstractUser):
     is_doctor = models.BooleanField(default=False)
     is_labtech = models.BooleanField(default=False)
+    is_patient = models.BooleanField(default=False)
     phone_number = models.CharField(
         max_length=15, verbose_name="Phone Number", null=True)
     
@@ -35,3 +36,31 @@ class LabTechnician(models.Model):
     class Meta:
         verbose_name = 'Lab Technician'
         verbose_name_plural = 'Lab Technicians'
+        
+class Patient(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    age = models.IntegerField(null=True, blank=True)
+    sex = models.BooleanField(null=True)
+    
+    def __str__(self):
+        return self.user.username
+    
+    class Meta:
+        verbose_name = 'Patient'
+        verbose_name_plural = 'Patients'
+        
+class Result(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
+    labtech = models.ForeignKey(LabTechnician, on_delete=models.CASCADE)
+    anaemia = models.BooleanField(null=True)
+    high_blood_pressure = models.BooleanField(null=True)
+    diabetes = models.BooleanField(null=True)
+    smoking = models.BooleanField(null=True)
+    creatine_phosphokinase = models.FloatField(null=True, help_text="CPK enzyme level (mcg/L)")
+    ejection_fraction = models.FloatField(null=True, help_text="Percentage of blood leaving the heart at each contraction (percentage)")
+    platelets = models.FloatField(null=True, help_text="(kiloplatelets/mL)")
+    serum_creatinine = models.FloatField(null=True, help_text="(mg/dL)")
+    serum_sodium = models.FloatField(null=True, help_text="(mEq/L)")
+    death_event = models.BooleanField(null=True)
+    
