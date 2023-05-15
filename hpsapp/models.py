@@ -48,6 +48,16 @@ class Patient(models.Model):
     class Meta:
         verbose_name = 'Patient'
         verbose_name_plural = 'Patients'
+
+class Receptionist(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    
+    def __str__(self):
+        return self.user.username
+    
+    class Meta:
+        verbose_name = 'Receptionist'
+        verbose_name_plural = 'Receptionists'
         
 class Result(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
@@ -63,4 +73,4 @@ class Result(models.Model):
     serum_creatinine = models.FloatField(null=True, help_text="(mg/dL)")
     serum_sodium = models.FloatField(null=True, help_text="(mEq/L)")
     death_event = models.BooleanField(null=True)
-    
+    date = models.DateTimeField(auto_now_add=True)
