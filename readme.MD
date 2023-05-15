@@ -1,0 +1,11 @@
+## Patient Flow
+ - A patient goes to the reception and is registered as a new patient or assigned to a doctor if already registered.
+ - A new PatientAppointment object is created with the patient, the assigned doctor, and the status set to "Registered."
+ - The patient is directed to the pre-consultation test, which records their height, weight, and blood pressure.
+ - When the pre-consultation test is completed, the status field of the PatientAppointment object is updated to "Pre-consultation," and the pre-consultation test results are saved to the preconsultation_test field.
+ - The patient is directed to wait for their turn to see the doctor.
+ - When the patient is consulted by the doctor, the status field of the PatientAppointment object is updated to "Consulted."
+ - The doctor orders a diagnostic test, which records various medical data.
+ - When the diagnostic test is completed, the status field of the PatientAppointment object is updated to "Diagnostic test," and the diagnostic test results are saved to the diagnostic_test field.
+ - The patient waits for feedback from the doctor.
+ - When the doctor provides feedback, the status field of the PatientAppointment object is updated to "Feedback."

@@ -5,6 +5,8 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 class User(AbstractUser):
     is_doctor = models.BooleanField(default=False)
     is_labtech = models.BooleanField(default=False)
+    is_receptionist = models.BooleanField(default=False)
+    is_nurse = models.BooleanField(default=False)
     is_patient = models.BooleanField(default=False)
     phone_number = models.CharField(
         max_length=15, verbose_name="Phone Number", null=True)
@@ -26,7 +28,6 @@ class Doctor(models.Model):
         verbose_name = 'Doctor'
         verbose_name_plural = 'Doctors'
 
-
 class LabTechnician(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
 
@@ -36,6 +37,26 @@ class LabTechnician(models.Model):
     class Meta:
         verbose_name = 'Lab Technician'
         verbose_name_plural = 'Lab Technicians'
+        
+class Receptionist(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    
+    def __str__(self):
+        return self.user.username
+    
+    class Meta:
+        verbose_name = 'Receptionist'
+        verbose_name_plural = 'Receptionists'
+        
+class Nurse(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    
+    def __str__(self):
+        return self.user.username
+
+    class Meta:
+        verbose_name = 'Nurse'
+        verbose_name_plural = 'Nurses'
         
 class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
@@ -49,17 +70,16 @@ class Patient(models.Model):
         verbose_name = 'Patient'
         verbose_name_plural = 'Patients'
 
-class Receptionist(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+class PreConsultationTest(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    height = models.FloatField(null=True, help_text="(cm)")
+    weight = models.FloatField(null=True, help_text="(kg)")
+    systolic_pressure = models.FloatField(null=True, blank=True, help_text="Systolic blood pressure in mmHg")
+    diastolic_pressure = models.FloatField(null=True, blank=True, help_text="Diastolic blood pressure in mmHg")
+    recorded_by = models.ForeignKey(Nurse, on_delete=models.CASCADE)
+    recorded_at = models.DateTimeField(auto_now_add=True)
     
-    def __str__(self):
-        return self.user.username
-    
-    class Meta:
-        verbose_name = 'Receptionist'
-        verbose_name_plural = 'Receptionists'
-        
-class Result(models.Model):
+class DiagnosticTest(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     labtech = models.ForeignKey(LabTechnician, on_delete=models.CASCADE)
@@ -73,4 +93,22 @@ class Result(models.Model):
     serum_creatinine = models.FloatField(null=True, help_text="(mg/dL)")
     serum_sodium = models.FloatField(null=True, help_text="(mEq/L)")
     death_event = models.BooleanField(null=True)
-    date = models.DateTimeField(auto_now_add=True)
+    recorded_at = models.DateTimeField(auto_now_add=True)
+    
+class PatientAppointment(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
+    scheduled_time = models.DateTimeField(auto_now_add=True)
+    status_choices = (
+        ('R', 'Registred - In pre-consultation'),
+        ('P', 'Pre-consultated - In consultation'),
+        ('C', 'Consulted - Awaiting Diagnostic test'),
+        ('D', 'Diagnostic tested - Awaiting Feedback'),
+        ('F', 'Feedback'),
+    )
+    status = models.CharField(max_length=1, choices=status_choices, default='R')
+    preconsultation_test = models.OneToOneField(PreConsultationTest, on_delete=models.SET_NULL, null=True, blank=True)
+    diagnostic_test = models.OneToOneField(DiagnosticTest, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.patient.user.username} - {self.doctor.user.username}"
