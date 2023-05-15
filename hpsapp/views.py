@@ -29,18 +29,25 @@ class CustomLoginView(LoginView):
             self.next_page = 'hpsapp:labtech_dashboard'
         elif user.is_doctor:
             self.next_page = 'hpsapp:doctor_dashboard'
+        elif user.is_nurse:
+            self.next_page = 'hpsapp:nurse_dashboard'
+        elif user.is_receptionist:
+            self.next_page = 'hpsapp:receptionist_dashboard'
         else:
             self.next_page = 'hpsapp:login'
-
+            
         return super().form_valid(form)
 
-
-
 ############################################################################################
-#                                   LABTECH'S VIEWS
+#                                   MIXINS
 ############################################################################################
+class DoctorRequiredMixin(UserPassesTestMixin):
+    raise_exception = True
+    permission_denied_message = "Doctor access only"
 
-
+    def test_func(self):
+        return self.request.user.is_doctor
+    
 class LabtechRequiredMixin(UserPassesTestMixin):
     raise_exception = True
     permission_denied_message = "LabTech access only"
@@ -48,7 +55,23 @@ class LabtechRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         return self.request.user.is_labtech
     
+class NurseRequiredMixin(UserPassesTestMixin):
+    raise_exception = True
+    permission_denied_message = "Nurse access only"
 
+    def test_func(self):
+        return self.request.user.is_nurse
+
+class ReceptionistRequiredMixin(UserPassesTestMixin):
+    raise_exception = True
+    permission_denied_message = "Receptionist access only"
+
+    def test_func(self):
+        return self.request.user.is_receptionist
+    
+############################################################################################
+#                                   LABTECH'S VIEWS
+############################################################################################
 class LabTechnicianSignUpView(CreateView):
     form_class = LabtechSignUpForm
     template_name = 'hpsapp/signup.html'
@@ -90,15 +113,6 @@ class LabTechnicianDashboardView(LoginRequiredMixin, LabtechRequiredMixin, Templ
 ############################################################################################
 #                                   DOCTOR'S VIEWS
 ############################################################################################
-
-class DoctorRequiredMixin(UserPassesTestMixin):
-    raise_exception = True
-    permission_denied_message = "Doctor access only"
-
-    def test_func(self):
-        return self.request.user.is_doctor
-    
-
 class DoctorSignUpView(CreateView):
     model = User
     form_class = DoctorSignUpForm
@@ -129,3 +143,25 @@ class DoctorDashboardView(LoginRequiredMixin, DoctorRequiredMixin, TemplateView)
         context['title'] = 'Doctor Dashboard'
         return context
     
+
+############################################################################################
+#                                   RECEPTIONIST'S VIEWS
+############################################################################################
+class ReceptionistDashboardView(LoginRequiredMixin, ReceptionistRequiredMixin, TemplateView):
+    template_name = 'hpsapp/receptionist_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Receptionist Dashboard'
+        return context
+
+############################################################################################
+#                                   NURSES'S VIEWS
+############################################################################################
+class NurseDashboardView(LoginRequiredMixin, NurseRequiredMixin, TemplateView):
+    template_name = 'hpsapp/nurse_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Nurse Dashboard'
+        return context
