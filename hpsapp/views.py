@@ -170,7 +170,11 @@ class SearchPatientView(View):
         paginator = Paginator(results, 3)  # Show 3 results per page
         page = request.GET.get('page')
         results = paginator.get_page(page)
-        return render(request, 'hpsapp/receptionist_patient_list.html', {'results': results})
+        context = {
+            'results': results,
+            'title': 'Receptionist Dashboard',
+        }
+        return render(request, 'hpsapp/receptionist_patient_list.html', context=context)
     
 ############################################################################################
 #                                   NURSES'S VIEWS
