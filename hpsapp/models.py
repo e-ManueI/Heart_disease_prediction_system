@@ -60,7 +60,7 @@ class Nurse(models.Model):
         
 class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, null=True, blank=True)
+    # doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, null=True, blank=True)
     age = models.IntegerField(null=True, blank=True)
     sex = models.BooleanField(null=True)
     
