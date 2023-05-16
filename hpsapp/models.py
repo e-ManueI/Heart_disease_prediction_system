@@ -19,7 +19,7 @@ class User(AbstractUser):
 
 class Doctor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    department = models.CharField(max_length=255, null=True, blank=True)
+    specialization = models.CharField(max_length=255, null=True, blank=True)
     
     def __str__(self):
         return self.user.username
@@ -60,11 +60,16 @@ class Nurse(models.Model):
         
 class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, null=True, blank=True)
     age = models.IntegerField(null=True, blank=True)
     sex = models.BooleanField(null=True)
     
     def __str__(self):
         return self.user.username
+    
+    @property
+    def gender(self):
+        return "Male" if self.sex else "Female"
     
     class Meta:
         verbose_name = 'Patient'

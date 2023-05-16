@@ -1,0 +1,10 @@
+{% extends 'hpsapp/base.html' %}
+{% load static %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% for patient in results %}
+    {{patient.user.username}}
+{% endfor %}
+
+{% endblock content %}

@@ -1,11 +1,14 @@
-from django.urls import reverse_lazy
-from django.views.generic import CreateView
 from .forms import DoctorSignUpForm, LabtechSignUpForm
-from .models import LabTechnician, Doctor, User
+from .models import LabTechnician, Doctor, User, Patient
 from django.contrib.auth.views import LoginView
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, View, CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import redirect
+from django.urls import reverse_lazy
+from django.shortcuts import redirect, render
+from django.contrib import messages
+from django.db.models import Q
+from functools import reduce
+from django.core.paginator import Paginator
 
 
 ############################################################################################
@@ -13,15 +16,6 @@ from django.shortcuts import redirect
 ############################################################################################
 class CustomLoginView(LoginView):
     template_name = 'hpsapp/login.html'
-
-    # def get_success_url(self):
-    #     user = self.request.user
-    #     if user.is_authenticated and user.is_doctor:
-    #         return reverse_lazy('doctor_dashboard')
-    #     elif user.is_authenticated and user.is_labtech:
-    #         return reverse_lazy('labtech_dashboard')
-    #     else:
-    #         return super().get_success_url()
 
     def form_valid(self, form):
         user = form.get_user()
@@ -154,7 +148,30 @@ class ReceptionistDashboardView(LoginRequiredMixin, ReceptionistRequiredMixin, T
         context = super().get_context_data(**kwargs)
         context['title'] = 'Receptionist Dashboard'
         return context
-
+    
+# correct search view
+class SearchPatientView(View):
+    def get(self, request):
+        query = request.GET.get('q')
+        if not query:
+            messages.warning(request, 'Please enter a search query')
+            return redirect('hpsapp:receptionist_dashboard')
+        words = query.split()
+        results = Patient.objects.filter(
+            reduce(lambda x, y: x | y, [
+                Q(user__username__icontains=word) |
+                Q(user__first_name__icontains=word) |
+                Q(user__last_name__icontains=word)
+                for word in words])
+            ).distinct()
+        if not results:
+            messages.warning(request, 'No results found for query: {}'.format(query))
+            return redirect('hpsapp:receptionist_dashboard')
+        paginator = Paginator(results, 3)  # Show 3 results per page
+        page = request.GET.get('page')
+        results = paginator.get_page(page)
+        return render(request, 'hpsapp/receptionist_patient_list.html', {'results': results})
+    
 ############################################################################################
 #                                   NURSES'S VIEWS
 ############################################################################################

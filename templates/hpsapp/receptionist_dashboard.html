@@ -3,4 +3,52 @@
 {% block content %}
     <h1>{{ title }}</h1>
     <p>Home page content goes here.</p>
+
+
+    <section id="hero" class="d-flex align-items-top">
+    <div class="container text-top position-relative" data-aos="fade-in" data-aos-delay="200">
+        <!-- Message banner for search queries -->
+        {% if messages %}
+        <div class="alert-banner mt-0 text-center">
+            {% for message in messages %}
+            <div id="alert-{{ forloop.counter }}" class="alert alert-{{ message.tags }} alert-dismissible fade show"
+                role="alert">
+                {{ message }}
+            </div>
+            <script>
+                setTimeout(function () {
+                    $('#alert-{{ forloop.counter }}').fadeOut('slow');
+                }, 8000);
+            </script>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="search-content-container position-relative">
+            <div class="search-content">
+                <h1>Patient Search</h1>
+                <div class="search-content-content">
+                    <h2>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ea, officiis cum.</h2>
+                </div>
+            </div>
+        </div>
+
+        <form class="search-form" action="{% url 'hpsapp:receptionist_search' %}" method="get">
+            <div class="form-group text-center">
+                <div class="form-row">
+                    <div class="col-md-6">
+                        <input type="text" name="q" placeholder="Which patient are you looking for today?" class="form-control">
+                    </div>
+
+                </div>
+                
+                <div class="form-row">
+                    <div class="col-md-12 text-center">
+                        <input type="submit" value="Search" class="btn-get-started scrollto btn btn-success">
+                    </div>
+                </div>
+            </div>
+        </form>
+        </div>
+    </section>
+
 {% endblock content %}
