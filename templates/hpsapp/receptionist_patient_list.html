@@ -1,12 +1,42 @@
 {% extends 'hpsapp/base.html' %}
 {% load static %}
 
-
+<!-- receptionist_patient_list.html -->
 {% block content %}
-<h1>{{ title }}</h1>
-{% for patient in results %}
-    {{patient.user.username}}
-    
-{% endfor %}
+  <h1>Search Results</h1>
 
-{% endblock content %}
+<form method="post" action="{% url 'hpsapp:assign_doctor' patient_id=patient.user_id %}">
+{% csrf_token %}
+    {% if patients %}
+
+    <table>
+        <thead>
+            <tr>
+            <th>Patient</th>
+            <th>Assign Doctor</th>
+            <th>Action</th>
+            </tr>
+        </thead>
+        
+        <tbody>
+            {% for patient in patients %}
+            <tr>
+                <td>{{ patient.user.username }}</td>
+                <td>
+                    <select name="doctor_id">
+                        {% for doctor in doctors %}
+                            <option value="{{ doctor.id }}">{{ doctor.user.username }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                </td>
+                <td><button type="submit">Assign</button></td>   
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else%}
+        <p>No results found</p>
+    {% endif %}
+</form>
+{% endblock %}

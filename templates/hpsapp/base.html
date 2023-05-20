@@ -9,5 +9,16 @@
 <body>
     {% block content %}
     {% endblock content %}
+    
+    {% block auth %}
+        {% if user.is_authenticated %}
+            <form action="{% url 'hpsapp:logout' %}" method="post">
+                {% csrf_token %}
+                
+                <button type="submit">Logout</button>
+            </form>
+        {% endif %}
+    {% endblock auth %}
+
 </body>
 </html>

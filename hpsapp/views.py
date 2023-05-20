@@ -1,15 +1,15 @@
 from .forms import DoctorSignUpForm, LabtechSignUpForm
-from .models import LabTechnician, Doctor, User, Patient
+from .models import LabTechnician, Doctor, User, Patient, PatientAppointment
 from django.contrib.auth.views import LoginView
 from django.views.generic import TemplateView, View, CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
 from django.db.models import Q
 from functools import reduce
 from django.core.paginator import Paginator
-
+import logging
 
 ############################################################################################
 #                                   GENERAL VIEWS
@@ -157,24 +157,104 @@ class SearchPatientView(View):
             messages.warning(request, 'Please enter a search query')
             return redirect('hpsapp:receptionist_dashboard')
         words = query.split()
-        results = Patient.objects.filter(
+        patients = Patient.objects.filter(
             reduce(lambda x, y: x | y, [
                 Q(user__username__icontains=word) |
                 Q(user__first_name__icontains=word) |
                 Q(user__last_name__icontains=word)
                 for word in words])
-            ).distinct()
-        if not results:
+        ).distinct()
+
+        if not patients:
             messages.warning(request, 'No results found for query: {}'.format(query))
             return redirect('hpsapp:receptionist_dashboard')
-        paginator = Paginator(results, 3)  # Show 3 results per page
-        page = request.GET.get('page')
-        results = paginator.get_page(page)
+
+        doctors = Doctor.objects.all()
+
         context = {
-            'results': results,
+            'patients': patients,
+            'doctors': doctors,
             'title': 'Receptionist Dashboard',
         }
         return render(request, 'hpsapp/receptionist_patient_list.html', context=context)
+
+    def post(self, request):
+        patient_id = request.POST.get('patient_id')
+        doctor_id = request.POST.get('doctor_id')
+
+        try:
+            print("starting the function patient")
+            patient = get_object_or_404(Patient, user_id=int(patient_id))
+            print("Finished the fnction patient")
+            doctor = get_object_or_404(Doctor, user_id=int(doctor_id))  
+            appointment = PatientAppointment.objects.create(patient=patient, doctor=doctor, status='R')
+            messages.success(request, f'Doctor assigned to patient {patient.user.username}')
+        
+        except (ValueError, Patient.DoesNotExist, Doctor.DoesNotExist):
+            # Handle the case where patient_id is not a valid number
+             messages.error(request, f'Invalid patient ID {patient_id}')
+                
+        return redirect('hpsapp:receptionist_dashboard')
+    
+class PatientListView(View):
+    def get(self, request):
+        patients = Patient.objects.all()
+        context = {
+            'patients': patients,
+        }
+        return render(request, 'hpsapp/patient_list.html', context=context)
+    
+logger = logging.getLogger( __name__)
+def assign_doctor_to_patient(request, patient_id):
+    if request.method == 'POST':
+        doctor_id = request.POST.get('doctor_id')
+        patient = get_object_or_404(Patient, user_id=patient_id)
+        doctor = get_object_or_404(Doctor, user_id=doctor_id)
+        
+        try:
+            # Create or update patient's appointment
+            patient_appointment, _ = PatientAppointment.objects.get_or_create(patient=patient)
+            patient_appointment.doctor = doctor
+            patient_appointment.status = 'P'  # Update the status to 'Pre-consultated - In consultation'
+            patient_appointment.save()
+
+            messages.success(request, f"Doctor '{doctor.user.username}' assigned to patient '{patient.user.username}' successfully.")
+        except Exception as e:
+            # Log the error
+            logger.exception("Error occurred while assigning a doctor to a patient:")
+            
+            # Display error message to the user
+            messages.error(request, "An error occurred while assigning a doctor to the patient. Please try again later.")
+        
+    return redirect('hpsapp:patient_list')
+
+
+# def assign_doctor_to_patient(request, patient_id):
+#     if request.method == 'POST':
+#         doctor_id = request.POST.get('doctor_id')
+#         patient = get_object_or_404(Patient, user_id=patient_id)
+#         doctor = get_object_or_404(Doctor, user_id=doctor_id)
+#         # patient.doctor = doctor
+
+#         try:
+#             # Create or update patient's appointment
+#             patient_appointment, _ = PatientAppointment.objects.get_or_create(patient=patient)
+#             patient_appointment.doctor = doctor
+#             patient_appointment.status = 'P'  # Update the status to 'Pre-consultated - In consultation'
+#             patient_appointment.save()
+#             print(patient_appointment.status, patient_appointment.doctor, patient_appointment.patient)
+#             return redirect('hpsapp:receptionist_dashboard')
+#         except Exception as e:
+#             # Log the error            
+#             # logger.exception("Error occurred while assigning a doctor to a patient:")
+#             print(e)
+            
+#             # Display error message to the user
+#             messages.error(request, "An error occurred while assigning a doctor to the patient. Please try again later.")
+            
+#             # return redirect('hpsapp:error_page')  # Redirect to an error page
+
+#     return redirect('hpsapp:receptionist_dashboard')
     
 ############################################################################################
 #                                   NURSES'S VIEWS

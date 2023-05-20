@@ -112,8 +112,8 @@ class PatientAppointment(models.Model):
         ('F', 'Feedback'),
     )
     status = models.CharField(max_length=1, choices=status_choices, default='R')
-    preconsultation_test = models.OneToOneField(PreConsultationTest, on_delete=models.SET_NULL, null=True, blank=True)
-    diagnostic_test = models.OneToOneField(DiagnosticTest, on_delete=models.SET_NULL, null=True, blank=True)
+    # preconsultation_test = models.OneToOneField(PreConsultationTest, on_delete=models.SET_NULL, null=True, blank=True)
+    # diagnostic_test = models.OneToOneField(DiagnosticTest, on_delete=models.SET_NULL, null=True, blank=True)
     
     def __str__(self):
         return f"{self.patient.user.username} - {self.doctor.user.username}"
